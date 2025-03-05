@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Three.js</title>
+  </head>
+<body>
+
+  <canvas id="c"></canvas>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./path/to/three.module.js"
+      }
+    }
+    </script>
+
+  <script type="module">
+  import * as THREE from 'three';
+
+  function main() {
+    //create canvas and renderer
+    const canvas = document.querySelector('#c');
+    const renderer = new THREE.WebGLRenderer({antialias: true, canvas});
+
+    //setup camera
+    const fov = 75;
+    const aspect = 2;  // the canvas default
+    const near = 0.1;
+    const far = 5;
+    const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+
+    camera.position.z = 2;
+
+    //create scene
+    const scene = new THREE.Scene();
+
+    //make box
+    const boxWidth = 1;
+    const boxHeight = 1;
+    const boxDepth = 1;
+    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+    const material = new THREE.MeshPhongMaterial({color: 0x44aa88});
+
+    const cube = new THREE.Mesh(geometry, material);
+
+    //create light
+    const color = 0xFFFFFF;
+    const intensity = 3;
+    const light = new THREE.DirectionalLight(color, intensity);
+    light.position.set(-1, 2, 4);
+
+    //add light to scene
+    scene.add(light);
+
+    //add box to scene
+    scene.add(cube);
+
+    //render scene
+    renderer.render(scene, camera);
+  }
+
+  function makeInstance(geometry, color, x) {
+    const material = new THREE.MeshPhongMaterial({color});
+  
+    const cube = new THREE.Mesh(geometry, material);
+    scene.add(cube);
+  
+    cube.position.x = x;
+  
+    return cube;
+  }
+
+  function render(time) {
+  time *= 0.001;  // convert time to seconds
+ 
+  cube.rotation.x = time;
+  cube.rotation.y = time;
+ 
+  renderer.render(scene, camera);
+ 
+  requestAnimationFrame(render);
+}
+requestAnimationFrame(render);
+
+  main();
+  </script>
+
+</body>
+</html>
