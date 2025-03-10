@@ -6,17 +6,60 @@
   </head>
 <body>
 
-  <canvas id="c"></canvas>
+  <canvas id="c" data-engine="three.js r174" width="260" height="632"></canvas>
+  <div id="loading">
+    <div class="progress"><div class="progressbar"></div></div>
+  </div>
+
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+    #c {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+    #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    #loading .progress {
+        margin: 1.5em;
+        border: 1px solid white;
+        width: 50vw;
+    }
+    #loading .progressbar {
+        margin: 2px;
+        background: white;
+        height: 1em;
+        transform-origin: top left;
+        transform: scaleX(0);
+    }
+  </style>
+
+  
   <script type="importmap">
       {
         "imports": {
-          "three": "./node_modules/three/build/three.module.js"
+          "three": "./node_modules/three/build/three.module.js",
+          "three/addons/": "./node_modules/three/examples/jsm/"
+          
         }
       }
     </script>
 
   <script type="module">
   import * as THREE from 'three';
+  import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
+  import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
   function main() {
     //create canvas and renderer
@@ -27,64 +70,311 @@
     const fov = 75;
     const aspect = 2;  // the canvas default
     const near = 0.1;
-    const far = 5;
+    const far = 100;
     const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
 
-    camera.position.z = 2;
+    camera.position.x = 0;
+    camera.position.y = 3;
+    camera.position.z = 6;
+
+    //Camera Orbit controls
+    const controls = new OrbitControls(camera, canvas);
+    controls.target.set(0, 0, 0);
+    controls.update();
+ 
+    //make box geometry
+    const boxWidth = 1;
+    const boxHeight = 1;
+    const boxDepth = 1;
+    const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+    //make plane geometry
+    const planeSize = 40;
+    const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
+
+    //make sphere geometry
+    const sphereRadius = 2;
+    const sphereWidthDivisions = 32;
+    const sphereHeightDivisions = 16;
+    const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
 
     //create scene
     const scene = new THREE.Scene();
 
-    //make box
-    const boxWidth = 1;
-    const boxHeight = 1;
-    const boxDepth = 1;
-    const geometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+    //create loader
+    const loadManager = new THREE.LoadingManager();
+    const loader = new THREE.TextureLoader(loadManager);
 
-    const material = new THREE.MeshPhongMaterial({color: 0x44aa88});
+    //loading progress bar
+    const loadingElem = document.querySelector('#loading');
+    const progressBarElem = loadingElem.querySelector('.progressbar');
 
-    const cube = new THREE.Mesh(geometry, material);
 
-    //create light
-    const color = 0xFFFFFF;
-    const intensity = 3;
-    const light = new THREE.DirectionalLight(color, intensity);
-    light.position.set(-1, 2, 4);
+    const materials = [
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/wall.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-1.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-2.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-3.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-4.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-5.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-6.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/checker.png'), side: THREE.DoubleSide,}),
+    ];
 
-    //add light to scene
-    scene.add(light);
+    let cubes = [];
+    let spheres = [];
 
-    //add box to scene
-    //scene.add(cube);
+    loadManager.onLoad = () => {
+      loadingElem.style.display = 'none';
+      //floor plane
+      makeInstanceTexture(planeGeo, materials[7],  0,0,0, (Math.PI * -.5),0,0, false);
+      //other cubes
+      makeInstanceTexture(boxGeometry, materials.slice(1, 7),  0, 1);
+      makeInstanceTexture(boxGeometry, materials[0], -2, 1);
+      makeInstance(boxGeometry, 0xaa8844,  2, 1);
+      //spheres
+      makeInstance(sphereGeo, 0xCA8, 0,3,-5, 0,0,0, false);
+    };
 
-    function makeInstance(geometry, color, x) {
-      const material = new THREE.MeshPhongMaterial({color});
-    
-      const cube = new THREE.Mesh(geometry, material);
-      scene.add(cube);
-    
-      cube.position.x = x;
-    
-      return cube;
+    loadManager.onProgress = (urlOfLastItemLoaded, itemsLoaded, itemsTotal) => {
+      const progress = itemsLoaded / itemsTotal;
+      progressBarElem.style.transform = `scaleX(${progress})`;
+    };
+
+
+    //functions
+
+    function loadColorTexture( path ) {
+      const texture = loader.load( path );
+      texture.colorSpace = THREE.SRGBColorSpace;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.NearestFilter;
+
+      const material = new THREE.MeshPhongMaterial({
+        map: texture,
+      });
+
+      return texture;
+      //return material;
     }
 
-    const cubes = [
-      makeInstance(geometry, 0x44aa88,  0),
-      makeInstance(geometry, 0x8844aa, -2),
-      makeInstance(geometry, 0xaa8844,  2),
-    ];
+    function loadPlaneTexture( path ) {
+      const texture = loader.load( path );
+      texture.colorSpace = THREE.SRGBColorSpace;
+      //texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.magFilter = THREE.NearestFilter;
+
+      const planeSize = 40;
+ 
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.magFilter = THREE.NearestFilter;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const repeats = planeSize / 2;
+      texture.repeat.set(repeats, repeats);
+
+      //const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
+        // const planeMat = new THREE.MeshPhongMaterial({
+        //   map: texture,
+        //   side: THREE.DoubleSide,
+        // });
+        // const mesh = new THREE.Mesh(planeGeo, planeMat);
+        // mesh.rotation.x = Math.PI * -.5;
+        // scene.add(mesh);
+
+
+      return texture;
+    }
+
+    function makeInstance(geometry, color, x=0, y=0, z=0, rotx=0, roty=0, rotz=0, push=true) {
+
+      const material = new THREE.MeshPhongMaterial({color});
+
+      const cube = new THREE.Mesh(geometry, material);
+      scene.add(cube);
+      cube.position.x = x;
+      cube.position.y = y;
+      cube.position.z = z;
+      cube.rotation.x = rotx;
+      cube.rotation.y = roty;
+      cube.rotation.z = rotz;
+      if (push) {
+        cubes.push(cube);  // add to our list of cubes to rotate
+      }
+      //console.log("instance", cubes);
+    
+
+    }
+
+    function makeInstanceTexture(geometry, materials, x=0, y=0, z=0, rotx=0, roty=0, rotz=0, push=true) {
+      
+      const cube = new THREE.Mesh(geometry, materials);
+      scene.add(cube);
+      cube.position.x = x;
+      cube.position.y = y;
+      cube.position.z = z;
+      cube.rotation.x = rotx;
+      cube.rotation.y = roty;
+      cube.rotation.z = rotz;
+      if (push) {
+        cubes.push(cube);  // add to our list of cubes to rotate
+      }
+    
+    }
+
+    //fix window
+    function resizeRendererToDisplaySize(renderer) {
+      const canvas = renderer.domElement;
+      const pixelRatio = window.devicePixelRatio;
+      const width = Math.floor( canvas.clientWidth  * pixelRatio );
+      const height = Math.floor( canvas.clientHeight  * pixelRatio );
+      const needResize = canvas.width !== width || canvas.height !== height;
+      if (needResize) {
+        renderer.setSize(width, height, false);
+      }
+      return needResize;
+    }
+
+    //GUI for texture wrapping
+    class DegRadHelper {
+      constructor(obj, prop) {
+        this.obj = obj;
+        this.prop = prop;
+      }
+      get value() {
+        return THREE.MathUtils.radToDeg(this.obj[this.prop]);
+      }
+      set value(v) {
+        this.obj[this.prop] = THREE.MathUtils.degToRad(v);
+      }
+    }
+
+    class StringToNumberHelper {
+      constructor(obj, prop) {
+        this.obj = obj;
+        this.prop = prop;
+      }
+      get value() {
+        return this.obj[this.prop];
+      }
+      set value(v) {
+        this.obj[this.prop] = parseFloat(v);
+      }
+    }
+
+    class ColorGUIHelper {
+      constructor(object, prop) {
+        this.object = object;
+        this.prop = prop;
+      }
+      get value() {
+        return `#${this.object[this.prop].getHexString()}`;
+      }
+      set value(hexString) {
+        this.object[this.prop].set(hexString);
+      }
+    }
+
+    const wrapModes = {
+      'ClampToEdgeWrapping': THREE.ClampToEdgeWrapping,
+      'RepeatWrapping': THREE.RepeatWrapping,
+      'MirroredRepeatWrapping': THREE.MirroredRepeatWrapping,
+    };
+
+    //GUI helper for lights
+    function makeXYZGUI(gui, vector3, name, onChangeFn) {
+      const folder = gui.addFolder(name);
+      folder.add(vector3, 'x', -10, 10).onChange(onChangeFn);
+      folder.add(vector3, 'y', 0, 10).onChange(onChangeFn);
+      folder.add(vector3, 'z', -10, 10).onChange(onChangeFn);
+      folder.open();
+      //console.log("ran");
+    }
+
+    //lights
+
+    //Ambient/Hemishpere Light
+    //const ambColor = 0xFFFFFF;
+    const skyColor = 0xB1E1FF;  // light blue
+    const groundColor = 0xB97A20;  // brownish orange
+    const ambIntensity = 1;
+    const ambLight = new THREE.HemisphereLight(skyColor, groundColor, ambIntensity);
+    scene.add(ambLight);
+
+    //Directional
+    const dirColor = 0xFFFFFF;
+    const dirIntensity = 2;
+    const dirLight = new THREE.DirectionalLight(dirColor, dirIntensity);
+    dirLight.position.set(0, 10, 0);
+    dirLight.target.position.set(-5, 0, 0);
+    scene.add(dirLight);
+    scene.add(dirLight.target);
+
+    //GUI for lights
+
+    const lightHelper = new THREE.DirectionalLightHelper(dirLight);
+    scene.add(lightHelper);
+
+    function updateLight(light, helper) {
+      light.target.updateMatrixWorld();
+      helper.update();
+    }
+
+    updateLight(dirLight, lightHelper);
+
+    const gui = new GUI();
+    gui.addColor(new ColorGUIHelper(ambLight, 'color'), 'value').name('skyColor');
+    gui.addColor(new ColorGUIHelper(ambLight, 'groundColor'), 'value').name('groundColor');
+    gui.add(ambLight, 'intensity', 0, 5, 0.01);
+
+    gui.addColor(new ColorGUIHelper(dirLight, 'color'), 'value').name('directionalColor');
+    gui.add(dirLight, 'intensity', 0, 5, 0.01);
+
+    makeXYZGUI(gui, dirLight.position, 'position', updateLight(dirLight, lightHelper));
+    makeXYZGUI(gui, dirLight.target.position, 'target', updateLight(dirLight, lightHelper));
+
+
+    //GUI textures
+    // let texture = materials[0];
+    
+    // function updateTexture() {
+    //   texture.needsUpdate = true;
+    // }
+ 
+    // const gui = new GUI();
+    // gui.add(new StringToNumberHelper(texture, 'wrapS'), 'value', wrapModes)
+    //   .name('texture.wrapS')
+    //   .onChange(updateTexture);
+    // gui.add(new StringToNumberHelper(texture, 'wrapT'), 'value', wrapModes)
+    //   .name('texture.wrapT')
+    //   .onChange(updateTexture);
+    // gui.add(texture.repeat, 'x', 0, 5, .01).name('texture.repeat.x');
+    // gui.add(texture.repeat, 'y', 0, 5, .01).name('texture.repeat.y');
+    // gui.add(texture.offset, 'x', -2, 2, .01).name('texture.offset.x');
+    // gui.add(texture.offset, 'y', -2, 2, .01).name('texture.offset.y');
+    // gui.add(texture.center, 'x', -.5, 1.5, .01).name('texture.center.x');
+    // gui.add(texture.center, 'y', -.5, 1.5, .01).name('texture.center.y');
+    // gui.add(new DegRadHelper(texture, 'rotation'), 'value', -360, 360)
+    //   .name('texture.rotation');
+
+  
 
     function render(time) {
       time *= 0.001;  // convert time to seconds
+
+      if (resizeRendererToDisplaySize(renderer)) {
+        const canvas = renderer.domElement;
+        camera.aspect = canvas.clientWidth / canvas.clientHeight;
+        camera.updateProjectionMatrix();
+      }
     
+      //console.log(cubes);
       cubes.forEach((cube, ndx) => {
         const speed = 1 + ndx * .1;
         const rot = time * speed;
         cube.rotation.x = rot;
-        cube.rotation.y = rot;
+        cube.rotation.y = rot/2;
       });
-      //cube.rotation.x = time;
-      //cube.rotation.y = time;
     
       renderer.render(scene, camera);
     
@@ -100,6 +390,5 @@
 
   main();
   </script>
-
 </body>
 </html>
