@@ -82,6 +82,7 @@
   import {GUI} from 'three/addons/libs/lil-gui.module.min.js';
   import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
   import {OBJLoader} from 'three/addons/loaders/OBJLoader.js';
+  import {MTLLoader} from 'three/addons/loaders/MTLLoader.js';
 
   function main() {
     //create canvas and renderer
@@ -99,7 +100,7 @@
     {
       const scolor = 0xA3A3A3;
       const sdensity = 0.1;
-      scene.fog = new THREE.FogExp2(scolor, sdensity);
+      //scene.fog = new THREE.FogExp2(scolor, sdensity);
     }
 
     const view1Elem = document.querySelector('#view1');
@@ -159,7 +160,7 @@
     const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
     //make plane geometry
-    const planeSize = 40;
+    const planeSize = 150;
     const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
 
     //make sphere geometry
@@ -167,6 +168,110 @@
     const sphereWidthDivisions = 32;
     const sphereHeightDivisions = 16;
     const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
+
+
+    //objects
+    // {
+    //   //far trees
+    //   const objLoader = new OBJLoader();
+    //   objLoader.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = 18;
+    //     root.position.z = -42;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader2 = new OBJLoader();
+    //   objLoader2.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = -5;
+    //     root.position.z = -40;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader3 = new OBJLoader();
+    //   objLoader3.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = -25;
+    //     root.position.z = -25;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader4 = new OBJLoader();
+    //   objLoader4.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = 22;
+    //     root.position.z = -25;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader5 = new OBJLoader();
+    //   objLoader5.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = -15;
+    //     root.position.z = -45;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader6 = new OBJLoader();
+    //   objLoader6.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = 9;
+    //     root.position.z = -39;
+    //     scene.add(root);
+    //   });
+
+    //   //near trees
+    //   const objLoader7 = new OBJLoader();
+    //   objLoader7.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = 18;
+    //     root.position.z = 32;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader8 = new OBJLoader();
+    //   objLoader8.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = -5;
+    //     root.position.z = 30;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader9 = new OBJLoader();
+    //   objLoader9.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = -25;
+    //     root.position.z = 15;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader10 = new OBJLoader();
+    //   objLoader10.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = 22;
+    //     root.position.z = 15;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader11 = new OBJLoader();
+    //   objLoader11.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = -15;
+    //     root.position.z = 35;
+    //     scene.add(root);
+    //   });
+
+    //   const objLoader12 = new OBJLoader();
+    //   objLoader12.load('objects/pine_tree.obj', (root) => {
+    //     root.position.x = 9;
+    //     root.position.z = 39;
+    //     scene.add(root);
+    //   });
+    // }
+
+    // {
+    //   const mtlLoader = new MTLLoader();
+    //   mtlLoader.load('objects/pine_tree.mtl', (mtl) => {
+    //     mtl.preload();
+    //     for (const material of Object.values(mtl.materials)) {
+    //       material.side = THREE.DoubleSide;
+    //     }
+    //     objLoader.setMaterials(mtl);
+    //     objLoader.load('objects/pine_tree.obj', (root) => {
+    //       scene.add(root);
+    //     });
+    //   });
+    //}
 
 
     const materials = [
@@ -177,7 +282,8 @@
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-4.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-5.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-6.jpg')}),
-      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/checker.png'), side: THREE.DoubleSide,}),
+      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/grass_1.png'), side: THREE.DoubleSide,}),
+      //new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/checker.png'), side: THREE.DoubleSide,}),
     ];
 
     let cubes = [];
@@ -261,7 +367,7 @@
     function loadPlaneTexture( path ) {
       const texture = loader.load( path );
       texture.colorSpace = THREE.SRGBColorSpace;
-      //texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.minFilter = THREE.LinearMipmapLinearFilter;
       texture.magFilter = THREE.NearestFilter;
 
       const planeSize = 40;
@@ -469,8 +575,16 @@
 
     //GUI helper for camera
      function updateCamera() {
-       camera.updateProjectionMatrix();
+       //camera.updateProjectionMatrix();
+       // update the light target's matrixWorld because it's needed by the helper
+        dirLight.target.updateMatrixWorld();
+        dircameraHelper.update();
+        // update the light's shadow camera's projection matrix
+        dirLight.shadow.camera.updateProjectionMatrix();
+        // and now update the camera helper we're using to show the light's shadow camera
+        cameraHelper.update();
      }
+     //updateCamera();
 
     //lights
 
@@ -500,7 +614,7 @@
     const PointIntensity = 150;
     const PointLight = new THREE.PointLight(PointColor, PointIntensity);
     PointLight.position.set(0, 10, 0);
-    PointLight.castShadow = true;
+    PointLight.castShadow = false;
     scene.add(PointLight);
 
     //GUI for lights
@@ -521,6 +635,11 @@
 
     function updatePointLight() {
       PointLighthelper.update();
+      // update the light target's matrixWorld because it's needed by the helper
+      // update the light's shadow camera's projection matrix
+      PointLight.shadow.camera.updateProjectionMatrix();
+      // and now update the camera helper we're using to show the light's shadow camera
+      cameraHelper.update();
     }
 
     updateLight(dirLight, lightHelper);
@@ -541,28 +660,35 @@
     //directional
     gui.addColor(new ColorGUIHelper(dirLight, 'color'), 'value').name('directionalColor');
     gui.add(dirLight, 'intensity', 0, 30, 0.5);
-    makeXYZGUI(gui, dirLight.position, 'position', updateLight(dirLight, lightHelper));
-    makeXYZGUI(gui, dirLight.target.position, 'target', updateLight(dirLight, lightHelper));
+    makeXYZGUI(gui, dirLight.position, 'position', updateCamera());
+    makeXYZGUI(gui, dirLight.target.position, 'target', updateCamera());
     //dirLight.zoom = 0.1;
     {
-      const folder = gui.addFolder('Shadow Camera');
+      const folder = gui.addFolder('Shadow Camera 1');
       folder.open();
-      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'left', 'right'), 'value', 1, 100)
+      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'left', 'right'), 'value', 1, 200)
         .name('width')
         .onChange(updateCamera);
-      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'bottom', 'top'), 'value', 1, 100)
+      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'bottom', 'top'), 'value', 1, 200)
         .name('height')
         .onChange(updateCamera);
       const minMaxGUIHelper = new MinMaxGUIHelper(dirLight.shadow.camera, 'near', 'far', 0.1);
-      folder.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updateLight(dirLight, lightHelper));
-      folder.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updateLight(dirLight, lightHelper));
-      folder.add(dirLight.shadow.camera, 'zoom', 0.01, 1.5, 0.01).onChange(updateLight(dirLight, lightHelper));
+      folder.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updateCamera());
+      folder.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updateCamera());
+      folder.add(dirLight.shadow.camera, 'zoom', 0.01, 1.5, 0.01).onChange(updateCamera());
     }
     //Point Light
     gui.addColor(new ColorGUIHelper(PointLight, 'color'), 'value').name('directionalColor');
     gui.add(PointLight, 'intensity', 0, 250, 1);
     gui.add(PointLight, 'distance', 0, 40).onChange(updatePointLight);
     makeXYZGUI(gui, PointLight.position, 'position', updatePointLight);
+    {
+      const folder = gui.addFolder('Shadow Camera point');
+      folder.open();
+      const minMaxGUIHelper = new MinMaxGUIHelper(PointLight.shadow.camera, 'near', 'far', 0.1);
+      folder.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updatePointLight);
+      folder.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updatePointLight);
+    }
 
 
     //GUI textures
