@@ -94,6 +94,7 @@
     });
 
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     //create scene
     const scene = new THREE.Scene();
@@ -170,15 +171,21 @@
     const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
 
 
+    //make cylinder geometry
+    const radtop = 1;
+    const radbottom = 1;
+    const cylheight = 5;
+    const cylsegments = 15;
+    const Cylgeometry = new THREE.CylinderGeometry( radtop, radbottom, cylheight, cylsegments ); 
+
     //objects
     // {
     //   //far trees
-    //   const objLoader = new OBJLoader();
-    //   objLoader.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = 18;
-    //     root.position.z = -42;
-    //     scene.add(root);
-    //   });
+    // objLoader.load('objects/pine_tree.obj', (root) => {
+    //   root.position.x = 18;
+    //   root.position.z = -42;
+    //   scene.add(root);
+    // });
 
     //   const objLoader2 = new OBJLoader();
     //   objLoader2.load('objects/pine_tree.obj', (root) => {
@@ -260,17 +267,23 @@
     // }
 
     // {
-    //   const mtlLoader = new MTLLoader();
-    //   mtlLoader.load('objects/pine_tree.mtl', (mtl) => {
-    //     mtl.preload();
-    //     for (const material of Object.values(mtl.materials)) {
-    //       material.side = THREE.DoubleSide;
-    //     }
-    //     objLoader.setMaterials(mtl);
-    //     objLoader.load('objects/pine_tree.obj', (root) => {
-    //       scene.add(root);
-    //     });
-    //   });
+    const objLoader = new OBJLoader();
+    const mtlLoader = new MTLLoader();
+    mtlLoader.load('objects/Low-Poly_Tree.mtl', (mtl) => {
+      mtl.preload();
+      // for (const material of Object.values(mtl.materials)) {
+      //   material.side = THREE.DoubleSide;
+      // }
+      console.log(mtl)
+      objLoader.setMaterials(mtl);
+      objLoader.load('objects/Low-Poly_Tree.obj', (root) => {
+        console.log(root);
+        
+        root.position.z = 30;
+        
+        scene.add(root);
+      });
+    });
     //}
 
 
@@ -282,14 +295,17 @@
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-4.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-5.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-6.jpg')}),
-      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/grass_1.png'), side: THREE.DoubleSide,}),
-      //new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/checker.png'), side: THREE.DoubleSide,}),
+      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/grass_1.png', 40), side: THREE.DoubleSide,}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/wood_bark.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/bark_top.jpg'), side: THREE.DoubleSide,}),
+      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/fire.png', 2), transparent: true, side: THREE.DoubleSide,}),
+      
     ];
 
     let cubes = [];
     let spheres = [];
 
-    const shadowTexture = loader.load('resources/images/roundshadow.png');
+    const shadowTexture = loader.load('textures/roundshadow.png');
     const sphereShadowBases = [];
 
     const shadowplaneSize = 1;
@@ -338,7 +354,11 @@
       const planeMat = materials[7];
       planeMat.color.setRGB(1.5, 1.5, 1.5);
       const floor = makeInstanceTexture(planeGeo, planeMat,  0,0.01,0, (Math.PI * -.5),0,0, false);
-      floor.castShadow = false;
+
+      const fireGeo = new THREE.PlaneGeometry(10, 10);
+      makeInstanceTexture(fireGeo, materials[10],  5,5,5, 0,0,0, false);
+      //cylinders
+      makeInstanceTexture(Cylgeometry, [materials[8],materials[9],materials[9]],  0,1,0, 0,0,0, false);
       //other cubes
       makeInstanceTexture(boxGeometry, materials.slice(1, 7),  0, 1);
       makeInstanceTexture(boxGeometry, materials[0], -2, 1);
@@ -364,18 +384,17 @@
       return texture;
     }
 
-    function loadPlaneTexture( path ) {
+    function loadPlaneTexture( path, size ) {
       const texture = loader.load( path );
       texture.colorSpace = THREE.SRGBColorSpace;
-      texture.minFilter = THREE.LinearMipmapLinearFilter;
+      texture.minFilter = THREE.NearestMipmapLinearFilter;
       texture.magFilter = THREE.NearestFilter;
+      texture.anisotropy = 2;
 
-      const planeSize = 40;
+      const planeSize = size;
  
       texture.wrapS = THREE.RepeatWrapping;
       texture.wrapT = THREE.RepeatWrapping;
-      texture.magFilter = THREE.NearestFilter;
-      texture.colorSpace = THREE.SRGBColorSpace;
       const repeats = planeSize / 2;
       texture.repeat.set(repeats, repeats);
 
@@ -600,11 +619,18 @@
     const dirColor = 0xFFFFFF;
     const dirIntensity = 2;
     const dirLight = new THREE.DirectionalLight(dirColor, dirIntensity);
-    dirLight.position.set(0, 10, 0);
+    dirLight.position.set(30, 50, 0);
     dirLight.target.position.set(-5, 0, 0);
     dirLight.castShadow = true;
     scene.add(dirLight);
     scene.add(dirLight.target);
+    //dirLight.shadow.width = 150;
+    //dirLight.shadow.height = 150;
+
+    dirLight.shadow.camera.left = -105;
+    dirLight.shadow.camera.right = 108;
+    dirLight.shadow.camera.top = 109;
+    dirLight.shadow.camera.bottom = -105;
 
     const dircameraHelper = new THREE.CameraHelper(dirLight.shadow.camera);
     scene.add(dircameraHelper);
@@ -666,10 +692,10 @@
     {
       const folder = gui.addFolder('Shadow Camera 1');
       folder.open();
-      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'left', 'right'), 'value', 1, 200)
+      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'left', 'right'), 'value', 150, 300)
         .name('width')
         .onChange(updateCamera);
-      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'bottom', 'top'), 'value', 1, 200)
+      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'bottom', 'top'), 'value', 150, 300)
         .name('height')
         .onChange(updateCamera);
       const minMaxGUIHelper = new MinMaxGUIHelper(dirLight.shadow.camera, 'near', 'far', 0.1);
