@@ -100,8 +100,8 @@
     const scene = new THREE.Scene();
     {
       const scolor = 0xA3A3A3;
-      const sdensity = 0.1;
-      //scene.fog = new THREE.FogExp2(scolor, sdensity);
+      const sdensity = 0.05;
+      scene.fog = new THREE.FogExp2(scolor, sdensity);
     }
 
     const view1Elem = document.querySelector('#view1');
@@ -199,113 +199,9 @@
       return Cylgeometry;
     }
 
-    //objects
-    // {
-    //   //far trees
-    // objLoader.load('objects/pine_tree.obj', (root) => {
-    //   root.position.x = 18;
-    //   root.position.z = -42;
-    //   scene.add(root);
-    // });
-
-    //   const objLoader2 = new OBJLoader();
-    //   objLoader2.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = -5;
-    //     root.position.z = -40;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader3 = new OBJLoader();
-    //   objLoader3.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = -25;
-    //     root.position.z = -25;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader4 = new OBJLoader();
-    //   objLoader4.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = 22;
-    //     root.position.z = -25;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader5 = new OBJLoader();
-    //   objLoader5.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = -15;
-    //     root.position.z = -45;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader6 = new OBJLoader();
-    //   objLoader6.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = 9;
-    //     root.position.z = -39;
-    //     scene.add(root);
-    //   });
-
-    //   //near trees
-    //   const objLoader7 = new OBJLoader();
-    //   objLoader7.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = 18;
-    //     root.position.z = 32;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader8 = new OBJLoader();
-    //   objLoader8.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = -5;
-    //     root.position.z = 30;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader9 = new OBJLoader();
-    //   objLoader9.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = -25;
-    //     root.position.z = 15;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader10 = new OBJLoader();
-    //   objLoader10.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = 22;
-    //     root.position.z = 15;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader11 = new OBJLoader();
-    //   objLoader11.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = -15;
-    //     root.position.z = 35;
-    //     scene.add(root);
-    //   });
-
-    //   const objLoader12 = new OBJLoader();
-    //   objLoader12.load('objects/pine_tree.obj', (root) => {
-    //     root.position.x = 9;
-    //     root.position.z = 39;
-    //     scene.add(root);
-    //   });
-    // }
-
-    // {
-    const objLoader = new OBJLoader();
-    const mtlLoader = new MTLLoader();
-    mtlLoader.load('objects/Low-Poly_Tree.mtl', (mtl) => {
-      mtl.preload();
-      // for (const material of Object.values(mtl.materials)) {
-      //   material.side = THREE.DoubleSide;
-      // }
-      console.log(mtl)
-      objLoader.setMaterials(mtl);
-      objLoader.load('objects/Low-Poly_Tree.obj', (root) => {
-        console.log(root);
-        
-        root.position.z = 30;
-        
-        scene.add(root);
-      });
-    });
-    //}
+    let zs = [-5,-10,-17,-23,-20, -25,-31,-35,-30,-35,-31,-25,-20,-23, -17,-10, -5,  5, 10, 17, 23, 20, 25,31,35,30,35,31,25,20,23,17,10, 5];
+    let xs = [-35,-32,-30,-26,-20,-14, -9, -5,  0,  5,  9, 14, 20, 26, 30,32,35,-35,-32,-30,-26,-20,-14,-9,-5, 0, 5, 9,14,20,26,30,32,35];
+    
 
 
     const materials = [
@@ -320,7 +216,7 @@
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/wood_bark.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/bark_top.jpg'), side: THREE.DoubleSide,}),
       new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/fire.png', 2), transparent: true, depthWrite: false, side: THREE.DoubleSide,}),
-      
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/wood_legs.jpg')}),
     ];
 
     let cubes = [];
@@ -376,17 +272,11 @@
       base.add(shadowMesh);
     
       // add the simple shape to the base
-      //const u = i / numSpheres;   // goes from 0 to 1 as we iterate the spheres.
-      //const sphereMat = new THREE.MeshPhongMaterial();
-      //sphereMat.color.setHSL(u, 1, .75);
-      //const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+      
       inst.castShadow = true;
       inst.receiveShadow = true;
-      //inst.position.set(0, sphereRadius + 2, 0);
       base.add(inst);
     
-      // remember all 3 plus the y position
-      //sphereShadowBases.push({base, inst, shadowMesh, y: inst.position.y});
     }
 
     loadManager.onLoad = () => {
@@ -395,6 +285,25 @@
       const planeMat = materials[7];
       //planeMat.color.setRGB(1.5, 1.5, 1.5);
       const floor = makeInstanceTexture("fplane", planeGeo, planeMat,  0,0,0, (Math.PI * -.5),0,0, false);
+
+      //objects
+      for (let i = 0; i < xs.length; i++) {
+        makeInstance("sphere", smallSphereGeo, 0x000000, xs[i],1,zs[i], 0,0,0, false, 2);
+        const objLoader = new OBJLoader();
+        const mtlLoader = new MTLLoader();
+        mtlLoader.load('objects/Low-Poly_Tree.mtl', (mtl) => {
+          mtl.preload();
+          objLoader.setMaterials(mtl);
+          objLoader.load('objects/Low-Poly_Tree.obj', (root) => {
+            console.log(root);
+            
+            root.position.x = xs[i];
+            root.position.z = zs[i];
+            
+            scene.add(root);
+          });
+        });
+      }
 
       const fireGeo = new THREE.PlaneGeometry(4, 4);
       let flame = makeInstanceTexture("fplane", fireGeo, materials[10],  0,2,0, 0,0,0, false);
@@ -436,7 +345,20 @@
       makeInstance("cube", boxGeometry, 0xaa8844,  2, 5);
       //makeInstance("sphere", smallSphereGeo, 0x000000, 2,1,0, 0,0,0, false, 0.5);
       //spheres
-      //makeInstance("sphere", sphereGeo, '#CA8', -5,3,-5, 0,0,0, false);
+      let sun = makeInstance("don't", sphereGeo, 0xFFFF00, 30,50,0, 0,0,0, false);
+      sun.castShadow = false;
+      sun.receiveShadow = false;
+
+      let skewer = newCylinder(0.05,0.05,6,15);
+      makeInstance("cylinder", skewer, 0x2A2A2A, 2,2,0, 0,0,(Math.PI * 0.25), false);
+      let marshmellow = newCylinder(0.15,0.15,0.25,15);
+      makeInstance("cylinder", marshmellow, 0xFFD7A0, 0.75,3.25,0, 0,0,(Math.PI * 0.25), false);
+      makeInstance("cylinder", marshmellow, 0x3A3A3A, 0.25,3.75,0, 0,0,(Math.PI * 0.25), false);
+
+      let tabletop = newBoxGeo(2,0.2,2);
+      makeInstanceTexture("cube", tabletop, materials[9],  4,2,-2);
+
+      
     };
 
     loadManager.onProgress = (urlOfLastItemLoaded, itemsLoaded, itemsTotal) => {
@@ -671,7 +593,7 @@
     function makeXYZGUI(gui, vector3, name, onChangeFn) {
       const folder = gui.addFolder(name);
       folder.add(vector3, 'x', -30, 30).onChange(onChangeFn);
-      folder.add(vector3, 'y', 0, 30).onChange(onChangeFn);
+      folder.add(vector3, 'y', 0, 50).onChange(onChangeFn);
       folder.add(vector3, 'z', -30, 30).onChange(onChangeFn);
       folder.open();
       //console.log("ran");
@@ -770,7 +692,7 @@
     gui.add(ambLight, 'intensity', 0, 5, 0.01);
     //directional
     gui.addColor(new ColorGUIHelper(dirLight, 'color'), 'value').name('directionalColor');
-    gui.add(dirLight, 'intensity', 0, 30, 0.5);
+    gui.add(dirLight, 'intensity', 0, 50, 0.5);
     makeXYZGUI(gui, dirLight.position, 'position', updateCamera());
     makeXYZGUI(gui, dirLight.target.position, 'target', updateCamera());
     //dirLight.zoom = 0.1;
