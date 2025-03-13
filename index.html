@@ -181,6 +181,15 @@
 
     const smallSphereGeo = new THREE.SphereGeometry(0.1, 4,4);
 
+    function newSphere(r,w,h) {
+      const sphereRadius = r;
+      const sphereWidthDivisions = w;
+      const sphereHeightDivisions = h;
+      const newsphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
+
+      return newsphereGeo;
+    }
+
 
     //make cylinder geometry
     const radtop = 0.75;
@@ -212,11 +221,12 @@
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-4.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-5.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/flower-6.jpg')}),
-      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/grass_1.png', 40), side: THREE.DoubleSide,}),
+      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/grass_1.png', 40)}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/wood_bark.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/bark_top.jpg'), side: THREE.DoubleSide,}),
       new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/fire.png', 2), transparent: true, depthWrite: false, side: THREE.DoubleSide,}),
-      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/wood_legs.jpg')}),
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/wood_legs.jpg')}), //11
+      new THREE.MeshPhongMaterial({map: loadColorTexture('textures/moon.jpg')}), //12
     ];
 
     let cubes = [];
@@ -295,7 +305,7 @@
           mtl.preload();
           objLoader.setMaterials(mtl);
           objLoader.load('objects/Low-Poly_Tree.obj', (root) => {
-            console.log(root);
+            //console.log(root);
             
             root.position.x = xs[i];
             root.position.z = zs[i];
@@ -337,17 +347,10 @@
       makeInstanceTexture("cylinder", longcyl, [materials[8],materials[9],materials[9]],  1,1,0, 0,0,(Math.PI * 0.25), false);
 
       
-      //other cubes
-      makeInstanceTexture("cube", boxGeometry, materials.slice(1, 7),  0, 5);
-      //makeInstance("sphere", smallSphereGeo, 0x000000, 0,1,0, 0,0,0, false, 0.5);
-      makeInstanceTexture("cube", boxGeometry, materials[0], -2, 5);
-      //makeInstance("sphere", smallSphereGeo, 0x000000, -2,1,0, 0,0,0, false, 0.5);
-      makeInstance("cube", boxGeometry, 0xaa8844,  2, 5);
-      //makeInstance("sphere", smallSphereGeo, 0x000000, 2,1,0, 0,0,0, false, 0.5);
       //spheres
-      let sun = makeInstance("don't", sphereGeo, 0xFFFF00, 30,50,0, 0,0,0, false);
-      sun.castShadow = false;
-      sun.receiveShadow = false;
+      let moon = makeInstanceTexture("don't", sphereGeo, materials[12], 30,50,0, 0,0,0, false);
+      moon.castShadow = false;
+      moon.receiveShadow = false;
 
       let skewer = newCylinder(0.05,0.05,6,15);
       makeInstance("cylinder", skewer, 0x2A2A2A, 2,2,0, 0,0,(Math.PI * 0.25), false);
@@ -356,7 +359,40 @@
       makeInstance("cylinder", marshmellow, 0x3A3A3A, 0.25,3.75,0, 0,0,(Math.PI * 0.25), false);
 
       let tabletop = newBoxGeo(2,0.2,2);
-      makeInstanceTexture("cube", tabletop, materials[9],  4,2,-2);
+      makeInstanceTexture("cube", tabletop, materials[9],  4,2,-2, 0,0,0, false);
+
+      let tableleg = newBoxGeo(0.25,2,0.25);
+      makeInstanceTexture("cube", tableleg, materials[11],  3.25,1,-2.75, 0,0,0, false);//top left
+      makeInstanceTexture("cube", tableleg, materials[11],  4.75,1,-2.75, 0,0,0, false);//top right
+      makeInstanceTexture("cube", tableleg, materials[11],  3.25,1,-1.25, 0,0,0, false);
+      makeInstanceTexture("cube", tableleg, materials[11],  4.75,1,-1.25, 0,0,0, false);
+
+      makeInstance("cylinder", marshmellow, 0xFFFFFF, 4.2,2.25,-2.2, 0,0,0, false);
+      makeInstance("cylinder", marshmellow, 0xFFFFFF, 4.2,2.25,-1.9, 0,0,0, false);
+      makeInstance("cylinder", marshmellow, 0xFFFFFF, 3.8,2.25,-2.2, 0,0,0, false);
+      makeInstance("cylinder", marshmellow, 0xFFFFFF, 3.8,2.25,-1.9, 0,0,0, false);
+      makeInstance("cylinder", marshmellow, 0xFFFFFF, 4,2.5,-2, 0,0,0, false);
+
+      //sparks animated
+      let spark = newSphere(0.3, 10,10);
+      makeInstance("sphere", spark, 0xBBBBBB,  0.2, 1,0.2,   0,0,0, true, 0.0);
+      makeInstance("sphere", spark, 0xBBBBBB,    0, 1,  0,   0,0,0, true, 0.0);
+      makeInstance("sphere", spark, 0xBBBBBB, -0.1, 1,  0,   0,0,0, true, 0.0);
+      makeInstance("sphere", spark, 0xBBBBBB,  0.2, 1,0.2,   0,0,0, true, 0.0);
+      makeInstance("sphere", spark, 0xBBBBBB,    0, 1,  0,   0,0,0, true, 0.0);
+      makeInstance("sphere", spark, 0xBBBBBB, -0.1, 1,  0,   0,0,0, true, 0.0);
+      makeInstance("sphere", spark, 0xBBBBBB,  0.2, 1,0.2,   0,0,0, true, 0.0);
+      makeInstance("sphere", spark, 0xBBBBBB,    0, 1,  0,   0,0,0, true, 0.0);
+      makeInstance("sphere", spark, 0xBBBBBB, -0.1, 1,  0,   0,0,0, true, 0.0);
+      
+      //tent
+      // let tentbase = newSphere(4,32,32);
+      // makeInstance("sphere", tentbase, 0x0AFA0A, -4,0,-10, 0,0,0, false, 0.5);
+
+      // let tentflap = newBoxGeo(6,0.1,2);
+      // makeInstance("cube", tentflap, 0x0AFA0A,  -5.8,2.25,-7.5, 0,(Math.PI * 0.15),(Math.PI * 0.25), false);
+      // makeInstance("cube", tentflap, 0x0AFA0A,  -2.0,2.25,-7.5, 0,(Math.PI * -0.15),(Math.PI * -0.25), false);
+      // makeInstance("cube", tentflap, 0x000000,  -2.0,2.25,-7.5, (Math.PI * 0.55),0,0, false);
 
       
     };
@@ -422,7 +458,7 @@
 
     }
 
-    function makeInstanceTexture(type, geometry, materials, x=0, y=0, z=0, rotx=0, roty=0, rotz=0, push=true, shadow=sphereRadius) {
+    function makeInstanceTexture(type, geometry, materials, x=0, y=0, z=0, rotx=0, roty=0, rotz=0, push=false, shadow=sphereRadius) {
       
       const cube = new THREE.Mesh(geometry, materials);
       cube.castShadow = true;
@@ -618,7 +654,7 @@
     //const ambColor = 0xFFFFFF;
     const skyColor = 0xA5A7AB;  // light blue
     const groundColor = 0xB97A20;  // brownish orange
-    const ambIntensity = 1;
+    const ambIntensity = 0.5;
     const ambLight = new THREE.HemisphereLight(skyColor, groundColor, ambIntensity);
     scene.add(ambLight);
 
@@ -646,7 +682,7 @@
     const PointColor = 0xFFFFFF;
     const PointIntensity = 150;
     const PointLight = new THREE.PointLight(PointColor, PointIntensity);
-    PointLight.position.set(0, 10, 0);
+    PointLight.position.set(0, 2, 0);
     PointLight.castShadow = false;
     scene.add(PointLight);
 
@@ -697,21 +733,21 @@
     makeXYZGUI(gui, dirLight.target.position, 'target', updateCamera());
     //dirLight.zoom = 0.1;
     {
-      const folder = gui.addFolder('Shadow Camera 1');
+      const folder = gui.addFolder('Shadow Camera directional');
       folder.open();
-      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'left', 'right'), 'value', 150, 300)
+      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'left', 'right'), 'value', 0, 300)
         .name('width')
         .onChange(updateCamera);
-      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'bottom', 'top'), 'value', 150, 300)
+      folder.add(new DimensionGUIHelper(dirLight.shadow.camera, 'bottom', 'top'), 'value', 0, 300)
         .name('height')
         .onChange(updateCamera);
-      const minMaxGUIHelper = new MinMaxGUIHelper(dirLight.shadow.camera, 'near', 'far', 0.1);
-      folder.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updateCamera());
-      folder.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updateCamera());
-      folder.add(dirLight.shadow.camera, 'zoom', 0.01, 1.5, 0.01).onChange(updateCamera());
+      // const minMaxGUIHelper = new MinMaxGUIHelper(dirLight.shadow.camera, 'near', 'far', 0.1);
+      // folder.add(minMaxGUIHelper, 'min', 0.1, 50, 0.1).name('near').onChange(updateCamera());
+      // folder.add(minMaxGUIHelper, 'max', 0.1, 50, 0.1).name('far').onChange(updateCamera());
+      // folder.add(dirLight.shadow.camera, 'zoom', 0.01, 1.5, 0.01).onChange(updateCamera());
     }
     //Point Light
-    gui.addColor(new ColorGUIHelper(PointLight, 'color'), 'value').name('directionalColor');
+    gui.addColor(new ColorGUIHelper(PointLight, 'color'), 'value').name('PointColor');
     gui.add(PointLight, 'intensity', 0, 250, 1);
     gui.add(PointLight, 'distance', 0, 40).onChange(updatePointLight);
     makeXYZGUI(gui, PointLight.position, 'position', updatePointLight);
@@ -774,6 +810,8 @@
   
         // don't draw the camera helper in the original view
         cameraHelper.visible = false;
+        dircameraHelper.visible = false;
+        PointLighthelper.visible = false;
   
         //scene.background = (0x000000);
         // const texture = loader.load( 'textures/puresky_4k.png' );
@@ -797,6 +835,8 @@
   
         // draw the camera helper in the 2nd view
         cameraHelper.visible = true;
+        dircameraHelper.visible = true;
+        PointLighthelper.visible = true;
   
         scene.background = new THREE.Color(0x000040);
   
@@ -804,33 +844,12 @@
       }
     
       //console.log(cubes);
-      // cubes.forEach((cube, ndx) => {
-      //   const speed = 1 + ndx * .1;
-      //   const rot = time * speed;
-      //   cube.rotation.x = rot;
-      //   cube.rotation.y = rot/2;
-      // });
-
-      // sphereShadowBases.forEach((sphereShadowBase, ndx) => {
-      //   const {base, sphereMesh, shadowMesh, y} = sphereShadowBase;
-    
-      //   // u is a value that goes from 0 to 1 as we iterate the spheres
-      //   const u = ndx / sphereShadowBases.length;
-  
-      //   // compute a position for the base. This will move
-      //   // both the sphere and its shadow
-      //   const speed = time * .2;
-      //   const angle = speed + u * Math.PI * 2 * (ndx % 1 ? 1 : -1);
-      //   const radius = Math.sin(speed - ndx) * 10;
-      //   base.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
-    
-      //   // yOff is a value that goes from 0 to 1
-      //   const yOff = Math.abs(Math.sin(time * 2 + ndx));
-      //   // move the sphere up and down
-      //   sphereMesh.position.y = y + THREE.MathUtils.lerp(-2, 2, yOff);
-      //   // fade the shadow as the sphere goes up
-      //   shadowMesh.material.opacity = THREE.MathUtils.lerp(1, .25, yOff);
-      // });
+      cubes.forEach((cube, ndx) => {
+        const speed = 1 + ndx * 0.5;
+        const rot = time * speed;
+        //cube.position.x = rot % 2;
+        cube.position.y = (rot) % 20;
+      });
     
       //renderer.render(scene, camera);
     
