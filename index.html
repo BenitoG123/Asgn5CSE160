@@ -160,6 +160,15 @@
     const boxDepth = 1;
     const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
 
+    function newBoxGeo(w,h,d){
+      const boxWidth = w;
+      const boxHeight = h;
+      const boxDepth = d;
+      const boxGeometry = new THREE.BoxGeometry(boxWidth, boxHeight, boxDepth);
+
+      return boxGeometry;
+    }
+
     //make plane geometry
     const planeSize = 150;
     const planeGeo = new THREE.PlaneGeometry(planeSize, planeSize);
@@ -170,13 +179,25 @@
     const sphereHeightDivisions = 16;
     const sphereGeo = new THREE.SphereGeometry(sphereRadius, sphereWidthDivisions, sphereHeightDivisions);
 
+    const smallSphereGeo = new THREE.SphereGeometry(0.1, 4,4);
+
 
     //make cylinder geometry
-    const radtop = 1;
-    const radbottom = 1;
-    const cylheight = 5;
+    const radtop = 0.75;
+    const radbottom = 0.75;
+    const cylheight = 3;
     const cylsegments = 15;
     const Cylgeometry = new THREE.CylinderGeometry( radtop, radbottom, cylheight, cylsegments ); 
+
+    function newCylinder(r,b,h,s) {
+      const radtop = r;
+      const radbottom = b;
+      const cylheight = h;
+      const cylsegments = s;
+      const Cylgeometry = new THREE.CylinderGeometry( radtop, radbottom, cylheight, cylsegments ); 
+
+      return Cylgeometry;
+    }
 
     //objects
     // {
@@ -298,7 +319,7 @@
       new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/grass_1.png', 40), side: THREE.DoubleSide,}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/wood_bark.jpg')}),
       new THREE.MeshPhongMaterial({map: loadColorTexture('textures/bark_top.jpg'), side: THREE.DoubleSide,}),
-      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/fire.png', 2), transparent: true, side: THREE.DoubleSide,}),
+      new THREE.MeshPhongMaterial({map: loadPlaneTexture('textures/fire.png', 2), transparent: true, depthWrite: false, side: THREE.DoubleSide,}),
       
     ];
 
@@ -306,13 +327,13 @@
     let spheres = [];
 
     const shadowTexture = loader.load('textures/roundshadow.png');
+    const boxshadowTexture = loader.load('textures/roundshadow.png');
     const sphereShadowBases = [];
 
     const shadowplaneSize = 1;
     const shadowGeo = new THREE.PlaneGeometry(shadowplaneSize, shadowplaneSize);
 
-    const numSpheres = 15;
-    for (let i = 0; i < numSpheres; ++i) {
+    function addShadow(inst, geo, shadowrad){
       // make a base for the shadow and the sphere
       // so they move together.
       const base = new THREE.Object3D();
@@ -322,6 +343,7 @@
       // note: we make a new material for each sphere
       // so we can set that sphere's material transparency
       // separately.
+      
       const shadowMat = new THREE.MeshBasicMaterial({
         map: shadowTexture,
         transparent: true,    // so we can see the ground
@@ -330,41 +352,91 @@
       const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
       shadowMesh.position.y = 0.001;  // so we're above the ground slightly
       shadowMesh.rotation.x = Math.PI * -.5;
-      const shadowSize = sphereRadius * 4;
+      
+      let shadowSize;
+
+      if (geo == "sphere") {
+        shadowSize = shadowrad * 4;
+        shadowMesh.scale.set(shadowSize, shadowSize, 1);
+      } else if (geo == "cube") {
+        //shadowSize = sphereRadius * 4;
+        shadowMesh.scale.set(geo.width*4, geo.height*4, 1);
+      } else if (geo == "cylinder") {
+        let cylrad = geo.radiusTop * 10;
+        shadowMesh.scale.set(cylrad, geo.height, 1);
+      } else if (geo == "plane") {
+        shadowSize = sphereRadius * 4;
+        shadowMesh.scale.set(geo.width*2, geo.height*2, 1);
+      }
+
       shadowMesh.scale.set(shadowSize, shadowSize, shadowSize);
+      shadowMesh.position.x = inst.position.x;
+      shadowMesh.position.z = inst.position.z;
+      
       base.add(shadowMesh);
     
-      // add the sphere to the base
-      const u = i / numSpheres;   // goes from 0 to 1 as we iterate the spheres.
-      const sphereMat = new THREE.MeshPhongMaterial();
-      sphereMat.color.setHSL(u, 1, .75);
-      const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
-      sphereMesh.castShadow = true;
-      sphereMesh.receiveShadow = true;
-      sphereMesh.position.set(0, sphereRadius + 2, 0);
-      base.add(sphereMesh);
+      // add the simple shape to the base
+      //const u = i / numSpheres;   // goes from 0 to 1 as we iterate the spheres.
+      //const sphereMat = new THREE.MeshPhongMaterial();
+      //sphereMat.color.setHSL(u, 1, .75);
+      //const sphereMesh = new THREE.Mesh(sphereGeo, sphereMat);
+      inst.castShadow = true;
+      inst.receiveShadow = true;
+      //inst.position.set(0, sphereRadius + 2, 0);
+      base.add(inst);
     
       // remember all 3 plus the y position
-      sphereShadowBases.push({base, sphereMesh, shadowMesh, y: sphereMesh.position.y});
+      //sphereShadowBases.push({base, inst, shadowMesh, y: inst.position.y});
     }
 
     loadManager.onLoad = () => {
       loadingElem.style.display = 'none';
       //floor plane
       const planeMat = materials[7];
-      planeMat.color.setRGB(1.5, 1.5, 1.5);
-      const floor = makeInstanceTexture(planeGeo, planeMat,  0,0.01,0, (Math.PI * -.5),0,0, false);
+      //planeMat.color.setRGB(1.5, 1.5, 1.5);
+      const floor = makeInstanceTexture("fplane", planeGeo, planeMat,  0,0,0, (Math.PI * -.5),0,0, false);
 
-      const fireGeo = new THREE.PlaneGeometry(10, 10);
-      makeInstanceTexture(fireGeo, materials[10],  5,5,5, 0,0,0, false);
-      //cylinders
-      makeInstanceTexture(Cylgeometry, [materials[8],materials[9],materials[9]],  0,1,0, 0,0,0, false);
+      const fireGeo = new THREE.PlaneGeometry(4, 4);
+      let flame = makeInstanceTexture("fplane", fireGeo, materials[10],  0,2,0, 0,0,0, false);
+      flame.castShadow = false;
+      flame.receiveShadow = false;
+      let flame2 = makeInstanceTexture("fplane", fireGeo, materials[10],  0,2,0, 0,(Math.PI * -.5),0, false);
+      flame2.castShadow = false;
+      flame2.receiveShadow = false;
+      let flame3 = makeInstanceTexture("fplane", fireGeo, materials[10],  0,2,0, 0,(Math.PI * -.25),0, false);
+      flame3.castShadow = false;
+      flame3.receiveShadow = false;
+      let flame4 = makeInstanceTexture("fplane", fireGeo, materials[10],  0,2,0, 0,(Math.PI * 0.25),0, false);
+      flame4.castShadow = false;
+      flame4.receiveShadow = false;
+      //big logs
+      makeInstanceTexture("cylinder", Cylgeometry, [materials[8],materials[9],materials[9]],  0,0,1, 0,0,(Math.PI * -.5), false);
+      makeInstanceTexture("cylinder", Cylgeometry, [materials[8],materials[9],materials[9]],  0,0,-1, 0,0,(Math.PI * -.5), false);
+
+      //shadow
+      makeInstance("sphere", smallSphereGeo, 0x000000, 0,1,1, 0,0,0, false, 1);
+      makeInstance("sphere", smallSphereGeo, 0x000000, 0,1,-1, 0,0,0, false, 1);
+
+      //other logs
+      let smallcyl = newCylinder(0.25,0.25,3,15);
+      makeInstanceTexture("cylinder", smallcyl, [materials[8],materials[9],materials[9]],  1,1,0, (Math.PI * -.5),0,0, false);
+      makeInstanceTexture("cylinder", smallcyl, [materials[8],materials[9],materials[9]],  -1,1,0, (Math.PI * -.5),0,0, false);
+      let longcyl = newCylinder(0.25,0.25,4,15);
+      makeInstanceTexture("cylinder", longcyl, [materials[8],materials[9],materials[9]],  0,1,1, (Math.PI * -.25),0,0, false);
+      makeInstanceTexture("cylinder", longcyl, [materials[8],materials[9],materials[9]],  0,1,-1, (Math.PI * 0.25),0,0, false);
+      makeInstanceTexture("cylinder", longcyl, [materials[8],materials[9],materials[9]],  -1,1,0, 0,0,(Math.PI * -.25), false);
+      makeInstanceTexture("cylinder", longcyl, [materials[8],materials[9],materials[9]],  1,1,0, 0,0,(Math.PI * 0.25), false);
+
+      
       //other cubes
-      makeInstanceTexture(boxGeometry, materials.slice(1, 7),  0, 1);
-      makeInstanceTexture(boxGeometry, materials[0], -2, 1);
-      makeInstance(boxGeometry, 0xaa8844,  2, 1);
+      makeInstanceTexture("cube", boxGeometry, materials.slice(1, 7),  0, 5);
+      //makeInstance("sphere", smallSphereGeo, 0x000000, 0,1,0, 0,0,0, false, 0.5);
+      makeInstanceTexture("cube", boxGeometry, materials[0], -2, 5);
+      //makeInstance("sphere", smallSphereGeo, 0x000000, -2,1,0, 0,0,0, false, 0.5);
+      makeInstance("cube", boxGeometry, 0xaa8844,  2, 5);
+      //makeInstance("sphere", smallSphereGeo, 0x000000, 2,1,0, 0,0,0, false, 0.5);
       //spheres
-      makeInstance(sphereGeo, '#CA8', 0,3,-5, 0,0,0, false);
+      //makeInstance("sphere", sphereGeo, '#CA8', -5,3,-5, 0,0,0, false);
     };
 
     loadManager.onProgress = (urlOfLastItemLoaded, itemsLoaded, itemsTotal) => {
@@ -401,7 +473,7 @@
       return texture;
     }
 
-    function makeInstance(geometry, color, x=0, y=0, z=0, rotx=0, roty=0, rotz=0, push=true) {
+    function makeInstance(type, geometry, color, x=0, y=0, z=0, rotx=0, roty=0, rotz=0, push=true, shadow=sphereRadius) {
 
       const material = new THREE.MeshPhongMaterial({color});
 
@@ -415,14 +487,20 @@
       cube.rotation.x = rotx;
       cube.rotation.y = roty;
       cube.rotation.z = rotz;
+
+      if (type != "fplane"){
+        addShadow(cube, type, shadow);
+      }
+
       if (push) {
         cubes.push(cube);  // add to our list of cubes to rotate
       }
     
+      return cube;
 
     }
 
-    function makeInstanceTexture(geometry, materials, x=0, y=0, z=0, rotx=0, roty=0, rotz=0, push=true) {
+    function makeInstanceTexture(type, geometry, materials, x=0, y=0, z=0, rotx=0, roty=0, rotz=0, push=true, shadow=sphereRadius) {
       
       const cube = new THREE.Mesh(geometry, materials);
       cube.castShadow = true;
@@ -434,9 +512,16 @@
       cube.rotation.x = rotx;
       cube.rotation.y = roty;
       cube.rotation.z = rotz;
+
+      if (type != "fplane"){
+        addShadow(cube, type, shadow);
+      }
+
       if (push) {
         cubes.push(cube);  // add to our list of cubes to rotate
       }
+
+      return cube;
     
     }
 
@@ -797,33 +882,33 @@
       }
     
       //console.log(cubes);
-      cubes.forEach((cube, ndx) => {
-        const speed = 1 + ndx * .1;
-        const rot = time * speed;
-        cube.rotation.x = rot;
-        cube.rotation.y = rot/2;
-      });
+      // cubes.forEach((cube, ndx) => {
+      //   const speed = 1 + ndx * .1;
+      //   const rot = time * speed;
+      //   cube.rotation.x = rot;
+      //   cube.rotation.y = rot/2;
+      // });
 
-      sphereShadowBases.forEach((sphereShadowBase, ndx) => {
-        const {base, sphereMesh, shadowMesh, y} = sphereShadowBase;
+      // sphereShadowBases.forEach((sphereShadowBase, ndx) => {
+      //   const {base, sphereMesh, shadowMesh, y} = sphereShadowBase;
     
-        // u is a value that goes from 0 to 1 as we iterate the spheres
-        const u = ndx / sphereShadowBases.length;
+      //   // u is a value that goes from 0 to 1 as we iterate the spheres
+      //   const u = ndx / sphereShadowBases.length;
   
-        // compute a position for the base. This will move
-        // both the sphere and its shadow
-        const speed = time * .2;
-        const angle = speed + u * Math.PI * 2 * (ndx % 1 ? 1 : -1);
-        const radius = Math.sin(speed - ndx) * 10;
-        base.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+      //   // compute a position for the base. This will move
+      //   // both the sphere and its shadow
+      //   const speed = time * .2;
+      //   const angle = speed + u * Math.PI * 2 * (ndx % 1 ? 1 : -1);
+      //   const radius = Math.sin(speed - ndx) * 10;
+      //   base.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
     
-        // yOff is a value that goes from 0 to 1
-        const yOff = Math.abs(Math.sin(time * 2 + ndx));
-        // move the sphere up and down
-        sphereMesh.position.y = y + THREE.MathUtils.lerp(-2, 2, yOff);
-        // fade the shadow as the sphere goes up
-        shadowMesh.material.opacity = THREE.MathUtils.lerp(1, .25, yOff);
-      });
+      //   // yOff is a value that goes from 0 to 1
+      //   const yOff = Math.abs(Math.sin(time * 2 + ndx));
+      //   // move the sphere up and down
+      //   sphereMesh.position.y = y + THREE.MathUtils.lerp(-2, 2, yOff);
+      //   // fade the shadow as the sphere goes up
+      //   shadowMesh.material.opacity = THREE.MathUtils.lerp(1, .25, yOff);
+      // });
     
       //renderer.render(scene, camera);
     
