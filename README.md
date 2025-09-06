@@ -1,3 +1,3 @@
 By: Benito Gravert
 
-Final Project for CSE 160
+Final Project for Computer Graphics (CSE 160)
